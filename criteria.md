@@ -25,9 +25,11 @@ Given a query that matches at least one listing, the agent completes all three
 tool calls and returns a fit card — in at least 4 of 5 tries.
 
 **Why this target:**
-<!-- Why 4 of 5 and not 5 of 5? Something about your search, probably —
-     "my search is a plain keyword match and some phrasings will miss" is a
-     real answer. -->
+My search is plain keyword matching, so a query that uses different words
+from the listing, like "running shoes" when the listing says "sneakers",
+finds nothing even though a match exists. I allow one miss for that. My test
+queries will use words that appear in the listings, so missing more than one
+would mean the search or the loop is broken, not just the wording.
 
 ---
 
@@ -37,66 +39,57 @@ Given a query that matches no listings, the agent stops before calling
 `suggest_outfit` and returns a message naming what to change — 5 of 5 tries.
 
 **Why this target:**
-<!-- Why is 5 of 5 reasonable here when criterion 1 isn't? What's different
-     about this path? -->
+The empty check is a single `if` on the list `search_listings` returns, and
+the empty path never calls the model. Search is deterministic, so the same
+impossible query produces the same empty list every time. Criterion 1 allows
+a miss because wording and model output vary; nothing varies here, so a
+single failure would mean the branch itself is broken.
 
 ---
 
-## 3. Something about state
+## 3. The item search found is the item the next tools receive
 
-<!-- YOU WRITE THIS ONE.
-
-     How would you know that the item your search found is the same item the
-     next tool received? Name something countable or observable.
-
-     This is the criterion people find hardest, because state failure doesn't
-     look like state failure — it looks like a tool problem. Something that
-     compares session["selected_item"] against what actually reached
-     suggest_outfit is the shape you're after. -->
-
-
+For 5 of 5 matching queries, the `id` of `session["selected_item"]` after the
+run equals the `id` of `session["search_results"][0]`.
 
 **Why this target:**
-
-
+Moving the item through the session is plain code with no model involved, so
+it should behave the same way every run. Any mismatch would mean the loop
+picked or overwrote the wrong item, which is a state bug rather than variation,
+so I allow no misses.
 
 ---
 
-## 4. Something about the fit card
+## 4. The fit card gets the price and platform right
 
-<!-- YOU WRITE THIS ONE.
-
-     The fit card calls a model, so the same input can produce different words
-     each time. That's not a bug — it's the nature of the tool. So what would
-     make it acceptable?
-
-     Think about what you'd actually be unhappy to see. A caption that never
-     mentions the price? Two different items producing the same opening
-     sentence? A card longer than a caption anyone would post? Any of those can
-     be turned into a number. -->
-
-
+In at least 4 of 5 runs on matching queries, the fit card contains the selected
+item's price written as a dollar sign followed by its whole-dollar amount (for
+a $24.00 listing, "$24" or "$24.00" both count) and the selected item's
+platform name, ignoring capitalization.
 
 **Why this target:**
-
-
+A caption with the wrong price or platform would send someone to the wrong
+place or set the wrong expectation, which is worse than a clumsy sentence. The
+prompt gives the model both values directly, so it should usually copy them.
+I allow one miss because the model writes at temperature 0.9 and may phrase the
+price loosely, like "24 bucks", or drop a detail; more than one miss would mean
+the prompt isn't controlling the output.
 
 ---
 
-## 5. Your choice
+## 5. The search respects the price ceiling
 
-<!-- YOU WRITE THIS ONE TOO.
-
-     Pick something you actually care about getting right. Speed, the empty
-     wardrobe path, what happens when the model can't be reached, whether the
-     search respects a price ceiling — anything, as long as it names a number
-     or an observable outcome. -->
-
-
+For 5 of 5 queries that state a maximum price, no listing in
+`session["search_results"]` has a price above that maximum.
 
 **Why this target:**
-
-
+If I ask for something under $50 and get a $75 listing, the agent has ignored a
+constraint I gave it, which makes every other result untrustworthy. The price
+filter is a plain comparison with no model involved, so it should never fail.
+The real risk is upstream: if `parse_query` misses the price, `max_price`
+becomes None and no filter runs at all. Checking every result rather than just
+the first catches that, and any miss would be a parsing or filtering bug, so I
+allow none.
 
 ---
 
