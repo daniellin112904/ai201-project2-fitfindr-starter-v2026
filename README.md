@@ -39,9 +39,7 @@
 
 ## What This Does
 
-<!-- Three or four sentences: what a user asks for, and what they get back. -->
-
-
+FitFindr is a thrift shopping agent. A user types what they want in plain language, like "vintage graphic tee under $30", and the agent searches 40 secondhand listings for matches within their price and size, picks the best one, suggests two outfits pairing it with clothes the user already owns, and writes a short caption they could post about the find. If nothing in the listings matches, it stops before suggesting outfits and tells the user which filter or word to change to get results.
 
 ---
 
@@ -84,57 +82,128 @@
 
 ## Sample Run
 
-<!-- Two things go here.
-
-     1. One FULL query and its output, pasted as text.
-     2. Your three per-tool terminal tests — the command and what it printed. -->
-
 **One full query**
 
 ```
-$ python app.py ask '...'
+$ python app.py ask 'vintage graphic tee under $30'
 
+  Found:    Y2K Baby Tee — Butterfly Print — $18.0 on depop
+
+  Outfit:   **Outfit 1: Casual Streetwear**
+- Y2K Baby Tee — Butterfly Print
+- Baggy straight-leg jeans, dark wash
+- Vintage black denim jacket
+- Chunky white sneakers
+- Black crossbody bag
+
+**Outfit 2: Edgy Contrast**
+- Y2K Baby Tee — Butterfly Print
+- Wide-leg khaki trousers
+- Black cropped zip hoodie
+- Black combat boots
+- Brown leather belt
+
+  Fit card: Scored this little $18.00 butterfly tee on Depop and I'm obsessed with the pink and purple print. Already planning to wear it with baggy dark-wash jeans and a black denim jacket for daytime, or switch it up with wide-leg khakis and combat boots for an edgy vibe. #y2k #thrifted
+
+0 model calls this session, 2 served from cache
+```
+
+**The empty path, from `python agent.py`**
+
+```
+=== A query it can't ===
+  stopped: No listings matched 'designer ballgown' in size XXS under $5. To get results, try broader words, like an item type ('jacket', 'dress', 'jeans') or a style ('vintage', 'y2k', 'streetwear').
+  fit_card is None — it should still be None here
 ```
 
 **The three tools, tested one at a time**
 
-```
-$ python -c "from tools import search_listings; print(search_listings('graphic tee', max_price=30))"
+`search_listings`, a matching query and an impossible one:
 
 ```
+$ python -c "from tools import search_listings; r = search_listings('graphic tee', max_price=30); print(len(r)); [print(x['id'], x['title'], x['price'], x['size']) for x in r]"
+7
+lst_002 Y2K Baby Tee — Butterfly Print 18.0 S/M
+lst_006 Graphic Tee — 2003 Tour Bootleg Style 24.0 L
+lst_033 Vintage Band Tee — Faded Grey 19.0 L
+lst_015 Vintage Graphic Hoodie — Faded Black 26.0 L
+lst_017 Mesh Long-Sleeve Top — Black 15.0 S/M
+lst_011 Low-Rise Cargo Pants — Khaki 27.0 W29
+lst_012 Oversized Crewneck Sweatshirt — Vintage Navy 20.0 XL (fits oversized)
+
+$ python -c "from tools import search_listings; print(search_listings('designer ballgown', size='XXS', max_price=5))"
+[]
+```
+
+`suggest_outfit`, with the example wardrobe and with an empty one:
 
 ```
-$ python -c "from tools import suggest_outfit; ..."
+$ python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
+**Outfit 1: Casual Streetwear**
+* Vintage Levi's 501 Jeans — Medium Wash
+* Oversized grey crewneck sweatshirt
+* Chunky white sneakers
+* Black crossbody bag
 
+**Outfit 2: Edge & Contrast**
+* Vintage Levi's 501 Jeans — Medium Wash
+* White ribbed tank top
+* Vintage black denim jacket
+* Black combat boots
+* Brown leather belt
+
+$ python -c "from tools import suggest_outfit; from utils.data_loader import get_empty_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_empty_wardrobe()))"
+**Outfit 1: Casual Streetwear**
+*   **Top:** Black ribbed cotton crewneck t-shirt
+*   **Outerwear:** Oversized tan canvas chore jacket
+*   **Shoes:** White canvas low-top sneakers
+*   **Accessories:** Silver chain necklace
+
+**Outfit 2: Elevated Denim**
+*   **Top:** Crisp white button-down oxford shirt (lightly tucked)
+*   **Belt:** Black leather belt with a simple silver buckle
+*   **Shoes:** Black leather loafers
+*   **Outerwear:** Black wool overcoat
 ```
 
-```
-$ python -c "from tools import create_fit_card; ..."
+`create_fit_card`, three runs on the same item with the cache off, then the empty-outfit guard:
 
 ```
+$ python -c "import config; config.CACHE_ENABLED = False; from tools import create_fit_card; from utils.data_loader import load_listings; item = load_listings()[0]; [print(f'--- run {i} ---', create_fit_card('Levis with an oversized grey crewneck and chunky white sneakers', item), sep='\n') for i in (1, 2, 3)]"
+--- run 1 ---
+Scored these vintage Levi's 501 jeans on depop for just $38.00 and they fit like an absolute dream. Can't wait to lean into the effortless streetwear vibe by pairing them with an oversized grey crewneck and chunky white sneakers. 
+
+#thrifted #streetwear
+--- run 2 ---
+Scored these vintage Levi's 501 jeans on depop for just $38.00 and they fit like an absolute dream. Can't wait to lean into the effortless streetwear vibe by pairing them with an oversized grey crewneck and chunky white sneakers. 
+
+#thriftfinds #levis
+--- run 3 ---
+Scored these vintage Levi's 501 jeans on depop for just $38.00 and the fit is genuinely unmatched. I’m living in this exact medium wash denim paired with an oversized grey crewneck and chunky white sneakers for the ultimate cozy streetwear vibe. 
+
+#thriftfinds #levis
+
+$ python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('   ', load_listings()[0]))"
+No fit card: there was no outfit suggestion to build a caption from.
+```
+
+The three fit cards all mention the price and platform, but the variation is small: all three share an opening, and runs 1 and 2 differ only in their hashtags.
 
 ---
 
 ## How I Used AI
 
-<!-- Two specific moments. What you asked, what came back, what you changed.
-
-     "I used Claude to help me code" is not enough.
-
-     "I gave Claude my search_listings spec. It returned None on no match
-     instead of an empty list, so I changed it" is the level we want. -->
-
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked Claude to write the code for all three tools and the planning loop.
+- *What came back:* Everything at once: the full `tools.py`, the parsing helpers and loop for `agent.py`, and the README specs in a single reply.
+- *What I changed:* I couldn't check that much code at once, so I had it go one step at a time instead: README specs first, then each tool on its own, tested from the terminal against its spec (including the empty case) before moving on, and only then the loop. That ordering is why every tool's output in Sample Run was checked before the loop used it.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* Help turning "the fit card shouldn't get the price or platform wrong" into criterion 4.
+- *What came back:* Claude pointed out that the model might write the price as "$24", "$24.00", or "24 bucks", so "contains the price" would be judged differently from one run to the next.
+- *What I changed:* I wrote the criterion to say exactly what counts: a dollar sign followed by the whole-dollar amount, with the platform matched ignoring capitalization. When I then ran the fit card three times, all three wrote "$38.00" and "depop", which that definition counts as a pass.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
