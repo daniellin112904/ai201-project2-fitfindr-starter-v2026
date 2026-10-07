@@ -47,59 +47,38 @@
 
 ## Tool Inventory
 
-<!-- Four lines per tool. This is worth 2 points and it's the single most
-     common place students lose them.
-
-     "Returns a list" earns NOTHING. The description has to say what is IN
-     the list.
-
-     The empty case isn't optional either — it's the thing your loop branches
-     on, and if you don't decide it here you'll discover it as a crash in
-     Milestone 5. -->
-
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Filters `data/listings.json` by price ceiling and size, then ranks what's left by how many of the description's keywords appear in each listing's title, description, category, brand, style tags and colors.
+- **Inputs:** `description` (str), `size` (str or None), `max_price` (float or None). A `None` size or price skips that filter.
+- **Returns:** A list of listing dicts, best match first, at most `config.SEARCH_RESULT_LIMIT` (10) long. Each dict has `id`, `title`, `description`, `category`, `style_tags` (list), `size`, `condition`, `price` (float), `colors` (list), `brand` (str or None), `platform`. Price matches when `price <= max_price`. Size matches when every token of the requested size appears among the tokens of the listing's size, split on anything that isn't a letter or digit, so `M` matches `S/M` and `M` but not `XL (oversized)`, and `8` matches `US 8`.
+- **When it has nothing:** An empty list `[]`. Never `None`, never an exception. This is what the loop branches on.
 
 ### `suggest_outfit`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Asks the model for two outfits built around the new item, using pieces from the user's wardrobe by name.
+- **Inputs:** `new_item` (dict, a listing dict), `wardrobe` (dict with an `items` key holding a list of wardrobe item dicts).
+- **Returns:** A non-empty string with two short labelled outfits, under about 120 words, naming wardrobe pieces exactly as they appear in the wardrobe.
+- **When it has nothing:** With an empty wardrobe, it asks the model for two outfits using common basics instead, and still returns a non-empty string. If the model returns nothing, it returns a message naming the item and saying to try again.
 
 ### `create_fit_card`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Asks the model for a short social media caption about the find and how it will be worn.
+- **Inputs:** `outfit` (str, the output of `suggest_outfit`), `new_item` (dict, a listing dict).
+- **Returns:** A caption string of two to four sentences that mentions the item, its price and its platform once each, with at most two hashtags, and no brand mentioned unless the listing has one.
+- **When it has nothing:** If `outfit` is empty or only whitespace, it returns the string `"No fit card: there was no outfit suggestion to build a caption from."` without calling the model.
 
 ---
 
 ## Planning Loop
 
-<!-- Your branch rule, stated as a rule — the condition AND both paths — plus
-     the file and function that holds it.
-
-     Like this:
-       "If search_listings returns an empty list, put a message in the session
-        and stop. Otherwise take the first result and go to suggest_outfit."
-        — agent.py::run_agent
-
-     The grader checks your code against what you claim here, so the file and
-     function have to be real. -->
-
-**Branch rule:**
+**Branch rule:** If `search_listings` returns an empty list, put a message in `session["error"]` that names which filter is blocking results and what to change, and stop without calling `suggest_outfit`. Otherwise, take the first result as `session["selected_item"]` and go to `suggest_outfit`, then `create_fit_card`.
 
 **Where it lives:** `agent.py::run_agent`
 
-**How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+**How the query is parsed:** Regex, in `agent.py::parse_query`. A price ceiling comes from "under/below/less than/max/up to $N", or a bare "$N" if none of those appear. A size comes from "size X". Whatever text is left, with punctuation removed, becomes the description.
 
-**What moves through the session:** <!-- which fields, in what order -->
+**What moves through the session:** `query` → `parsed` (description, size, max_price) → `search_results` → `selected_item` → `outfit_suggestion` → `fit_card`. On the empty path, the run stops after `search_results` with `error` set, and `selected_item`, `outfit_suggestion` and `fit_card` stay `None`. Each tool reads its inputs from the session, not from the previous call's return value.
 
 ---
 
