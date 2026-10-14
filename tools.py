@@ -92,12 +92,17 @@ def search_listings(
             " ".join(listing.get("colors") or []),
         ])))
 
+        # Unit 4 fix: every query word has to appear somewhere in the listing.
+        # Before, one shared word was enough, so "vintage jacket" matched
+        # vintage jeans when no jacket was under the price limit.
+        if not query_words or not query_words <= everything:
+            continue
+
         # A word found anywhere counts once; found in the title or tags, it
         # counts again, so "graphic tee" in the title outranks a passing
         # mention in the description.
         score = len(query_words & everything) + len(query_words & title_and_tags)
-        if score > 0:
-            scored.append((score, listing))
+        scored.append((score, listing))
 
     scored.sort(key=lambda pair: pair[0], reverse=True)
     return [listing for _, listing in scored[: config.SEARCH_RESULT_LIMIT]]
