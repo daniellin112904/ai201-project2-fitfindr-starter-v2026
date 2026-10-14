@@ -274,34 +274,63 @@ that produced it:
 
 ## Loop Trace
 
-<!-- One full run, printed step by step, with the MCP call visible in it.
-
-     `python app.py ask '...' --trace` once you've added the trace.step()
-     calls in Milestone 2.
-
-     Worth pasting BOTH the happy path and the empty-search path. The empty
-     one should be visibly shorter, because it stops. If your two traces are
-     the same length, your branch isn't working — and this is the fastest way
-     anyone will ever find that out. -->
-
 **Happy path**
 
 ```
-
+$ python app.py ask 'vintage graphic tee under $30' --trace
+[1] parse_query
+      in:  dict with keys: query
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: lst_002 Y2K Baby Tee — Butterfly Print $18.0…
+[3] suggest_outfit
+      in:  dict with keys: new_item, wardrobe_items
+      out: **Outfit 1: Casual Streetwear** - Y2K Baby Tee — Butterfly Print - Baggy straight-leg jeans, dark wash - Vinta…
+[4] create_fit_card
+      in:  dict with keys: new_item
+      out: Scored this little $18.00 butterfly tee on Depop and I'm obsessed with the pink and purple print. Already plan…
 ```
 
 **Empty search**
 
 ```
-
+$ python app.py ask 'designer ballgown size XXS under $5' --trace
+[1] parse_query
+      in:  dict with keys: query
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: [] (empty)
+[3] stop
+      in:  dict with keys: reason
+      out: No listings matched 'designer ballgown' in size XXS under $5. To get results, try broader words, like an item …
 ```
 
-**On the MCP move:** <!-- what changed in your code, and whether anything
-behaved differently afterwards. If the rewire didn't work, say exactly where it
-broke — the error text and the last thing that worked. That earns the point in
-full. -->
+The empty path stops at step 3 and never reaches `suggest_outfit`.
 
+**Empty wardrobe** (`--empty-wardrobe`)
 
+```
+$ python app.py ask 'platform sneakers size 8' --empty-wardrobe
+  Found:    Platform Sneakers — White Chunky Sole — $48.0 on poshmark
+
+  Outfit:   **90s Streetwear**
+Pair the white platform sneakers with straight-leg light-wash denim jeans, a fitted black ribbed tank top, and an oversized vintage plaid button-down shirt worn open. Accessorize with a small black nylon shoulder bag.
+```
+
+**Model unavailable** (one character of the key changed)
+
+```
+$ python app.py ask 'black leather jacket under $80'
+[3] stop
+      in:  dict with keys: reason
+      out: Couldn't reach the AI model, so no outfit or caption could be written. ...
+
+  Couldn't reach the AI model, so no outfit or caption could be written. The search still found 90s Leather Bomber — Blackfor $75.0 on depop. Check that the API key in .env is correct and that you're online, then run the same query again.
+```
+
+**On the MCP move:** `search_listings` is now registered in `mcp_server.py`, and `agent.py::run_agent` calls it through `mcp_client.call_tool` instead of directly. The return value did not change: the same queries found the same listings before and after the move, and the empty search still returns `[]`. The direct import of `search_listings` stays in `agent.py` only for `_empty_message`, which re-runs the search with one filter removed to tell the user which filter is blocking results.
 
 ---
 

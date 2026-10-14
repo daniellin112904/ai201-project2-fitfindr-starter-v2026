@@ -107,6 +107,15 @@ def _empty_message(parsed: dict) -> str:
 
     return f"No listings matched {asked}. To get results, " + ", or ".join(hints) + "."
 
+def _model_down_message(session: dict) -> str:
+    """The model couldn't be reached: say so, and keep what the search found."""
+    item = session.get("selected_item") or {}
+    found = f" The search still found {item.get('title')} for ${item.get('price')} on {item.get('platform')}." if item else ""
+    return (
+        "Couldn't reach the AI model, so no outfit or caption could be written."
+        f"{found} Check that the API key in .env is correct and that you're "
+        "online, then run the same query again."
+    )
 
 # ── planning loop ─────────────────────────────────────────────────────────────
 
@@ -176,6 +185,8 @@ def run_agent(query: str, wardrobe: dict) -> dict:
 
         if next_step == "parse":
             session["parsed"] = parse_query(session["query"])
+            trace.step("parse_query", inputs={"query": session["query"]},
+                       returned=session["parsed"])
             next_step = "search"
 
         elif next_step == "search":
@@ -185,25 +196,49 @@ def run_agent(query: str, wardrobe: dict) -> dict:
                 "size": parsed["size"],
                 "max_price": parsed["max_price"],
             })
+            trace.step("search_listings (via MCP)", inputs=parsed,
+                       returned=[f"{r['id']} {r['title']} ${r['price']}"
+                                 for r in session["search_results"]])
 
             # The branch. Nothing found: explain and stop before suggest_outfit.
             if not session["search_results"]:
                 session["error"] = _empty_message(parsed)
+                trace.step("stop", inputs={"reason": "empty search"},
+                           returned=session["error"])
                 next_step = "done"
             else:
                 session["selected_item"] = session["search_results"][0]
                 next_step = "suggest"
 
         elif next_step == "suggest":
-            session["outfit_suggestion"] = suggest_outfit(
-                session["selected_item"], session["wardrobe"]
-            )
+            try:
+                session["outfit_suggestion"] = suggest_outfit(
+                    session["selected_item"], session["wardrobe"]
+                )
+            except ModelUnavailable:
+                session["error"] = _model_down_message(session)
+                trace.step("stop", inputs={"reason": "model unavailable"},
+                           returned=session["error"])
+                break
+            trace.step("suggest_outfit",
+                       inputs={"new_item": session["selected_item"]["id"],
+                               "wardrobe_items": len(session["wardrobe"].get("items") or [])},
+                       returned=session["outfit_suggestion"])
             next_step = "fit_card"
 
         elif next_step == "fit_card":
-            session["fit_card"] = create_fit_card(
-                session["outfit_suggestion"], session["selected_item"]
-            )
+            try:
+                session["fit_card"] = create_fit_card(
+                    session["outfit_suggestion"], session["selected_item"]
+                )
+            except ModelUnavailable:
+                session["error"] = _model_down_message(session)
+                trace.step("stop", inputs={"reason": "model unavailable"},
+                           returned=session["error"])
+                break
+            trace.step("create_fit_card",
+                       inputs={"new_item": session["selected_item"]["id"]},
+                       returned=session["fit_card"])
             next_step = "done"
 
     return session
