@@ -214,61 +214,70 @@ The three fit cards all mention the price and platform, but the variation is sma
 
 ## Run Log — Before
 
-<!-- Five criteria, five tries each, in this exact format.
-
-     Five, because your criteria are written out of five. Mark each try PASS
-     or FAIL, count the passes, and read that count against your target — a
-     row targeting 4 of 5 with three PASS cells is MISSED (3/5).
-
-     `python run_eval.py --label before` runs everything and writes the table
-     into results/. Paste it here and fill in the verdicts. -->
+`python run_eval.py --label before`, cache off, five tries per scenario. Full
+output in `results/run_2026-10-14_0159_before.md`.
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
+| 1. Matching query completes all three tools | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Impossible query stops before tool 2 | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. Selected item is the first search result | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card states price and platform | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. No result above the max price | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 
-**Real output from one try**, pasted as text, naming the file and function
-that produced it:
+**Real output from one try of each**, from `run_eval.py` running `agent.py::run_agent`:
 
 ```
+Criterion 1, "vintage graphic tee under $30", try 1:
+[2] search_listings (via MCP)  out: 10 items: lst_002 Y2K Baby Tee — Butterfly Print $18.0…
+[3] suggest_outfit             out: **Outfit 1** Y2K Baby Tee — Butterfly Print paired with Baggy straight-leg jeans, dark wash…
+[4] create_fit_card            out: Scored this unreal butterfly print baby tee on Depop for just $18.00 and I am officially obsessed…
+  try 1: completed — fit card 313 chars
 
+Criterion 2, "designer ballgown size XXS under $5", try 1:
+[2] search_listings (via MCP)  out: [] (empty)
+[3] stop                       out: No listings matched 'designer ballgown' in size XXS under $5. To get results, try broader words…
+  try 1: stopped early
+
+Criterion 3, "90s track jacket in size M", try 1:
+[2] search_listings (via MCP)  out: 4 items: lst_004 90s Track Jacket — Navy/White Stripe $45.0…
+[3] suggest_outfit             out: **Outfit 1: Casual Streetwear** - 90s Track Jacket — Navy/White Stripe - White ribbed tank top…
+
+Criterion 4, "denim jacket under $50", try 1:
+[4] create_fit_card            out: Scored this cropped Wrangler denim jacket on Poshmark for $42.00 and I'm already obsessed…
+
+Criterion 5, "vintage jacket under $40", every result checked against the limit:
+{'description': 'vintage jacket', 'size': None, 'max_price': 40.0}
+over limit: []
+lst_001 bottoms 38.0 Vintage Levi's 501 Jeans — Medium Wash
+lst_002 tops 18.0 Y2K Baby Tee — Butterfly Print
+lst_003 tops 22.0 Oversized Flannel Shirt — Plaid Red/Black
+lst_005 bottoms 32.0 Corduroy Wide-Leg Pants — Rust
+lst_006 tops 24.0 Graphic Tee — 2003 Tour Bootleg Style
+lst_010 outerwear 40.0 Vintage Windbreaker — Color Block Purple/Teal
+lst_012 tops 20.0 Oversized Crewneck Sweatshirt — Vintage Navy
+lst_013 bottoms 30.0 90s Silk Slip Dress — Floral, Midi Length
+lst_014 accessories 12.0 Leather Belt — Brown, Braided
+lst_015 tops 26.0 Vintage Graphic Hoodie — Faded Black
 ```
 
 ---
 
 ## Verdicts and Diagnoses
 
-<!-- MET or MISSED per criterion against LAST UNIT's target, plus a sentence on
-     how you decided.
-
-     Then, for every miss: which of the four places it happened — a tool, the
-     loop's branch, the session, or the model's output — AND the mechanism.
-
-     Not a diagnosis:  "The fit card was bad."
-     A diagnosis:      "The fit card criterion missed on 2 of 5 items. Both had
-                        an empty brand field. My prompt puts the brand in the
-                        first sentence, so the card opened with a blank and read
-                        like a fragment. The tool worked; the prompt assumed a
-                        field that isn't always there."
-
-     Look for a pattern. Three misses on the same tool is one problem, not
-     three. -->
-
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Matching query completes | 4 of 5 | MET (5/5) | All five tries reached `create_fit_card` and returned a card. |
+| 2 | Impossible query stops | 5 of 5 | MET (5/5) | All five stopped at step 3 before `suggest_outfit`, with a message naming what to try. |
+| 3 | Selected item is first result | 5 of 5 | MET (5/5) | The first search result was `lst_004` on every try, and every outfit was built around that same track jacket. The trace prints input keys rather than values, so this is read from the outfit text rather than a printed id. |
+| 4 | Fit card price and platform | 4 of 5 | MET (5/5) | All five cards contain "Poshmark" and either "$42" or "$42.00", which my definition counts. |
+| 5 | No result over max price | 5 of 5 | MET (5/5) | Checked every result, not only the first: none above $40. Search is deterministic, so all five tries return this same list. |
 
 **Diagnoses**
 
+I missed nothing, which means my targets were set low. Criteria 2, 3 and 5 test plain code with no model involved, so they could only fail through a bug, and the run shows none. Criterion 1 allows a miss for wording I never tested: every scenario used words that appear in the listings. The criterion I'd tighten is 1, by adding a query with a synonym ("running shoes" for "sneakers") so it tests the weakness its own reason names.
 
+The run also showed a failure none of the five criteria check. For "vintage jacket under $40", the agent selected **Vintage Levi's 501 Jeans**. **Where:** the `search_listings` tool's ranking. **Mechanism:** no listing under $40 contains the word "jacket", so every result matched on "vintage" alone and scored the same. Ties keep file order, and `lst_001` is the first listing in the file, so the loop selected jeans. The search treats any single matching word as a match, so when the item-type word matches nothing, it quietly falls back to listings that only share an adjective. Criteria 1, 3 and 5 all passed on this run, because none of them asks whether the selected item is the kind of thing the user asked for.
 
 ---
 
