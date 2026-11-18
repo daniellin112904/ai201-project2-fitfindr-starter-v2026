@@ -121,7 +121,7 @@ def _model_down_message(session: dict) -> str:
 
 # ── planning loop ─────────────────────────────────────────────────────────────
 
-def run_agent(query: str, wardrobe: dict) -> dict:
+def _run_loop(query: str, wardrobe: dict) -> dict:
     """
     Run the loop once and return the finished session.
 
@@ -277,6 +277,38 @@ def run_agent(query: str, wardrobe: dict) -> dict:
 
     return session
 
+# ── capstone: every run is logged ─────────────────────────────────────────────
+
+def run_agent(query: str, wardrobe: dict) -> dict:
+    """
+    Run the loop once, and write one structured record to logs/runs.jsonl.
+
+    The loop itself is _run_loop() above. This wrapper times it, counts the
+    model calls and tokens it used, and logs the run even if it crashes,
+    then re-raises so a crash still looks like a crash.
+    """
+    import time
+    import generate
+    import run_log
+
+    started = run_log.now()
+    t0 = time.perf_counter()
+    calls0, tokens0 = generate.call_count(), generate.token_counts()
+    session, error = None, None
+    try:
+        session = _run_loop(query, wardrobe)
+        return session
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
+        raise
+    finally:
+        tokens1 = generate.token_counts()
+        run_log.write(run_log.build_record(
+            query, wardrobe, session, error, started,
+            duration_s=time.perf_counter() - t0,
+            calls=generate.call_count() - calls0,
+            tokens={k: tokens1[k] - tokens0[k] for k in ("prompt", "output")},
+        ))
 
 # ── running it directly ───────────────────────────────────────────────────────
 
