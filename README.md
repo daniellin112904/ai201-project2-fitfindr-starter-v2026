@@ -171,15 +171,15 @@ $ python -c "from tools import suggest_outfit; from utils.data_loader import get
 ```
 $ python -c "import config; config.CACHE_ENABLED = False; from tools import create_fit_card; from utils.data_loader import load_listings; item = load_listings()[0]; [print(f'--- run {i} ---', create_fit_card('Levis with an oversized grey crewneck and chunky white sneakers', item), sep='\n') for i in (1, 2, 3)]"
 --- run 1 ---
-Scored these vintage Levi's 501 jeans on depop for just $38.00 and they fit like an absolute dream. Can't wait to lean into the effortless streetwear vibe by pairing them with an oversized grey crewneck and chunky white sneakers. 
+Scored these vintage Levi's 501 jeans on depop for just $38.00 and they fit like an absolute dream. Can't wait to lean into the effortless streetwear vibe by pairing them with an oversized grey crewneck and chunky white sneakers.
 
 #thrifted #streetwear
 --- run 2 ---
-Scored these vintage Levi's 501 jeans on depop for just $38.00 and they fit like an absolute dream. Can't wait to lean into the effortless streetwear vibe by pairing them with an oversized grey crewneck and chunky white sneakers. 
+Scored these vintage Levi's 501 jeans on depop for just $38.00 and they fit like an absolute dream. Can't wait to lean into the effortless streetwear vibe by pairing them with an oversized grey crewneck and chunky white sneakers.
 
 #thriftfinds #levis
 --- run 3 ---
-Scored these vintage Levi's 501 jeans on depop for just $38.00 and the fit is genuinely unmatched. I’m living in this exact medium wash denim paired with an oversized grey crewneck and chunky white sneakers for the ultimate cozy streetwear vibe. 
+Scored these vintage Levi's 501 jeans on depop for just $38.00 and the fit is genuinely unmatched. I’m living in this exact medium wash denim paired with an oversized grey crewneck and chunky white sneakers for the ultimate cozy streetwear vibe.
 
 #thriftfinds #levis
 
@@ -195,15 +195,15 @@ The three fit cards all mention the price and platform, but the variation is sma
 
 **Moment 1**
 
-- *What I asked for:* I asked Claude to write the code for all three tools and the planning loop.
-- *What came back:* Everything at once: the full `tools.py`, the parsing helpers and loop for `agent.py`, and the README specs in a single reply.
-- *What I changed:* I couldn't check that much code at once, so I had it go one step at a time instead: README specs first, then each tool on its own, tested from the terminal against its spec (including the empty case) before moving on, and only then the loop. That ordering is why every tool's output in Sample Run was checked before the loop used it.
+- _What I asked for:_ I asked Claude to write the code for all three tools and the planning loop.
+- _What came back:_ Everything at once: the full `tools.py`, the parsing helpers and loop for `agent.py`, and the README specs in a single reply.
+- _What I changed:_ I couldn't check that much code at once, so I had it go one step at a time instead: README specs first, then each tool on its own, tested from the terminal against its spec (including the empty case) before moving on, and only then the loop. That ordering is why every tool's output in Sample Run was checked before the loop used it.
 
 **Moment 2**
 
-- *What I asked for:* Help turning "the fit card shouldn't get the price or platform wrong" into criterion 4.
-- *What came back:* Claude pointed out that the model might write the price as "$24", "$24.00", or "24 bucks", so "contains the price" would be judged differently from one run to the next.
-- *What I changed:* I wrote the criterion to say exactly what counts: a dollar sign followed by the whole-dollar amount, with the platform matched ignoring capitalization. When I then ran the fit card three times, all three wrote "$38.00" and "depop", which that definition counts as a pass.
+- _What I asked for:_ Help turning "the fit card shouldn't get the price or platform wrong" into criterion 4.
+- _What came back:_ Claude pointed out that the model might write the price as "$24", "$24.00", or "24 bucks", so "contains the price" would be judged differently from one run to the next.
+- _What I changed:_ I wrote the criterion to say exactly what counts: a dollar sign followed by the whole-dollar amount, with the platform matched ignoring capitalization. When I then ran the fit card three times, all three wrote "$38.00" and "depop", which that definition counts as a pass.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
@@ -217,13 +217,13 @@ The three fit cards all mention the price and platform, but the variation is sma
 `python run_eval.py --label before`, cache off, five tries per scenario. Full
 output in `results/run_2026-10-14_0159_before.md`.
 
-| Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
-|---|---|---|---|---|---|---|---|
-| 1. Matching query completes all three tools | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
-| 2. Impossible query stops before tool 2 | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
-| 3. Selected item is the first search result | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
-| 4. Fit card states price and platform | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
-| 5. No result above the max price | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| Criterion                                   | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict   |
+| ------------------------------------------- | ------ | ----- | ----- | ----- | ----- | ----- | --------- |
+| 1. Matching query completes all three tools | 4 of 5 | PASS  | PASS  | PASS  | PASS  | PASS  | MET (5/5) |
+| 2. Impossible query stops before tool 2     | 5 of 5 | PASS  | PASS  | PASS  | PASS  | PASS  | MET (5/5) |
+| 3. Selected item is the first search result | 5 of 5 | PASS  | PASS  | PASS  | PASS  | PASS  | MET (5/5) |
+| 4. Fit card states price and platform       | 4 of 5 | PASS  | PASS  | PASS  | PASS  | PASS  | MET (5/5) |
+| 5. No result above the max price            | 5 of 5 | PASS  | PASS  | PASS  | PASS  | PASS  | MET (5/5) |
 
 **Real output from one try of each**, from `run_eval.py` running `agent.py::run_agent`:
 
@@ -265,13 +265,13 @@ lst_015 tops 26.0 Vintage Graphic Hoodie — Faded Black
 
 ## Verdicts and Diagnoses
 
-| # | Criterion | Target | Verdict | How I decided |
-|---|---|---|---|---|
-| 1 | Matching query completes | 4 of 5 | MET (5/5) | All five tries reached `create_fit_card` and returned a card. |
-| 2 | Impossible query stops | 5 of 5 | MET (5/5) | All five stopped at step 3 before `suggest_outfit`, with a message naming what to try. |
-| 3 | Selected item is first result | 5 of 5 | MET (5/5) | The first search result was `lst_004` on every try, and every outfit was built around that same track jacket. The trace prints input keys rather than values, so this is read from the outfit text rather than a printed id. |
-| 4 | Fit card price and platform | 4 of 5 | MET (5/5) | All five cards contain "Poshmark" and either "$42" or "$42.00", which my definition counts. |
-| 5 | No result over max price | 5 of 5 | MET (5/5) | Checked every result, not only the first: none above $40. Search is deterministic, so all five tries return this same list. |
+| #   | Criterion                     | Target | Verdict   | How I decided                                                                                                                                                                                                                |
+| --- | ----------------------------- | ------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Matching query completes      | 4 of 5 | MET (5/5) | All five tries reached `create_fit_card` and returned a card.                                                                                                                                                                |
+| 2   | Impossible query stops        | 5 of 5 | MET (5/5) | All five stopped at step 3 before `suggest_outfit`, with a message naming what to try.                                                                                                                                       |
+| 3   | Selected item is first result | 5 of 5 | MET (5/5) | The first search result was `lst_004` on every try, and every outfit was built around that same track jacket. The trace prints input keys rather than values, so this is read from the outfit text rather than a printed id. |
+| 4   | Fit card price and platform   | 4 of 5 | MET (5/5) | All five cards contain "Poshmark" and either "$42" or "$42.00", which my definition counts.                                                                                                                                  |
+| 5   | No result over max price      | 5 of 5 | MET (5/5) | Checked every result, not only the first: none above $40. Search is deterministic, so all five tries return this same list.                                                                                                  |
 
 **Diagnoses**
 
@@ -353,13 +353,13 @@ $ python app.py ask 'black leather jacket under $80'
 
 `python run_eval.py --label after`, cache off, five tries per scenario. Full output in `results/run_2026-10-14_0213_after.md`.
 
-| Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
-|---|---|---|---|---|---|---|---|
-| 1. Matching query completes all three tools | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
-| 2. Impossible query stops before tool 2 | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
-| 3. Selected item is the first search result | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
-| 4. Fit card states price and platform | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
-| 5. No result above the max price | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| Criterion                                   | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict   |
+| ------------------------------------------- | ------ | ----- | ----- | ----- | ----- | ----- | --------- |
+| 1. Matching query completes all three tools | 4 of 5 | PASS  | PASS  | PASS  | PASS  | PASS  | MET (5/5) |
+| 2. Impossible query stops before tool 2     | 5 of 5 | PASS  | PASS  | PASS  | PASS  | PASS  | MET (5/5) |
+| 3. Selected item is the first search result | 5 of 5 | PASS  | PASS  | PASS  | PASS  | PASS  | MET (5/5) |
+| 4. Fit card states price and platform       | 4 of 5 | PASS  | PASS  | PASS  | PASS  | PASS  | MET (5/5) |
+| 5. No result above the max price            | 5 of 5 | PASS  | PASS  | PASS  | PASS  | PASS  | MET (5/5) |
 
 The failure it targeted, before and after:
 
@@ -395,8 +395,6 @@ No criterion is missed, so nothing here is a miss against a target. These are th
 **Criterion 3 is checked indirectly.** The trace prints input keys rather than values, so I read the selected item from the outfit text rather than comparing ids directly. I would have the trace print `selected_item["id"]` alongside `search_results[0]["id"]` so the check is mechanical.
 
 **My targets were set low.** Five of five on all five criteria in both runs means none of them was close to failing. I stopped here because I ran out of time before the deadline; tightening criterion 1 with a synonym scenario is what I would do first.
-
-
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
@@ -435,3 +433,24 @@ No criterion is missed, so nothing here is a miss against a target. These are th
 ---
 
 📖 **How to run this project: [RUNNING.md](RUNNING.md)**
+
+---
+
+## Capstone
+
+**What This Extends**
+
+FitFindr, my multi-tool shopping agent from units 3 and 4. Right now, when `search_listings` comes back empty, the loop stops and tells the user what to change. The new capability is a rewrite step on that empty branch: the agent asks the model to rewrite the description using words the listings actually use (for example "running shoes" to "sneakers"), then searches once more. If the second search also comes back empty, the loop stops with the same message it gives today.
+
+This comes straight from what I left broken in unit 4. My search is keyword matching, requiring every query word made the synonym problem worse, and fixing synonyms was the first thing I said I'd do next.
+
+**The Shape**
+
+C, extend one capability. The capability is the rewrite and retry step on the empty search branch in `agent.py::run_agent`. It runs locally (Path B), and every run writes a structured log record.
+
+Out of scope:
+
+- Changing how `search_listings` matches or ranks. The rewrite works around keyword matching; it doesn't replace it.
+- More than one retry, or rewriting queries that already found results.
+- Changing `suggest_outfit`, `create_fit_card`, or the MCP setup.
+- Hosting it online. It runs locally from `RUNNING.md`.
