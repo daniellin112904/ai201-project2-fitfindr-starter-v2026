@@ -454,3 +454,69 @@ Out of scope:
 - More than one retry, or rewriting queries that already found results.
 - Changing `suggest_outfit`, `create_fit_card`, or the MCP setup.
 - Hosting it online. It runs locally from `RUNNING.md`.
+
+**Running It**
+
+Path B, local. The start command, the environment, and the steps from a clean checkout are in [RUNNING.md](RUNNING.md) under **Capstone: running it locally**. The structured log below is the committed record of it running.
+
+**Instrumentation**
+
+`agent.py::run_agent` wraps the loop (`_run_loop`) and writes one JSON record per run to `logs/runs.jsonl` through `run_log.py`. It logs in a `finally` block, so a run that crashes is logged before the error is raised. Every caller gets logging this way: `app.py`, `serve.py`, `run_eval.py`, and `measure_cost.py`.
+
+| Field                                           | What it holds                                                               |
+| ----------------------------------------------- | --------------------------------------------------------------------------- |
+| `timestamp`                                     | When the run started, UTC                                                   |
+| `query`                                         | Exactly what the user typed                                                 |
+| `wardrobe_items`                                | How many wardrobe items the run had                                         |
+| `description`, `size`, `max_price`              | What `parse_query` pulled out of the query                                  |
+| `rewrite_tried`                                 | Whether the first search came back empty and the rewrite step ran           |
+| `rewritten_description`                         | What the model reworded the search to, or `null` if it had nothing usable   |
+| `results`                                       | How many listings the final search returned                                 |
+| `selected_item`, `selected_title`               | The listing the outfit and fit card were built on                           |
+| `outcome`                                       | `fit_card` (finished), `stopped` (ended early with a message), or `crashed` |
+| `message`                                       | The message the user saw when the run stopped                               |
+| `error`                                         | The exception, if the run crashed                                           |
+| `duration_s`                                    | Seconds from start to finish, including any rate limit wait                 |
+| `model_calls`, `prompt_tokens`, `output_tokens` | What the run spent, from `generate.py`'s counters. A cached answer costs 0  |
+
+Thirteen records from a real session, from `python run_log.py -n 15`. The first two were served from the cache, which is why they show 0 calls. The middle ten are `measure_cost.py` with the cache off. **The last one is a deliberate failure:** I pointed the agent at a model name that doesn't exist, so it found the denim jacket, couldn't reach the model for `suggest_outfit`, and stopped with a message instead of crashing.
+
+```json
+{"timestamp": "2026-11-18T23:22:30+00:00", "query": "purse", "wardrobe_items": 10, "description": "purse", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": "bag", "results": 1, "selected_item": "lst_039", "selected_title": "Mini Shoulder Bag — Tan Leather", "outcome": "fit_card", "message": null, "error": null, "duration_s": 3.494, "model_calls": 0, "prompt_tokens": 0, "output_tokens": 0}
+{"timestamp": "2026-11-18T23:22:34+00:00", "query": "designer ballgown size XXS under $5", "wardrobe_items": 10, "description": "designer ballgown", "size": "XXS", "max_price": 5.0, "rewrite_tried": true, "rewritten_description": "dress", "results": 0, "selected_item": null, "selected_title": null, "outcome": "stopped", "message": "No listings matched 'designer ballgown' in size XXS under $5. To get results, try broader words, like an item type ('jacket', 'dress', 'jeans') or a style ('vintage', 'y2k', 'streetwear'). (I also tried searching for 'dress'.)", "error": null, "duration_s": 3.117, "model_calls": 0, "prompt_tokens": 0, "output_tokens": 0}
+{"timestamp": "2026-11-18T23:24:01+00:00", "query": "comfy sweater", "wardrobe_items": 10, "description": "comfy sweater", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": null, "results": 0, "selected_item": null, "selected_title": null, "outcome": "stopped", "message": "No listings matched 'comfy sweater'. To get results, try broader words, like an item type ('jacket', 'dress', 'jeans') or a style ('vintage', 'y2k', 'streetwear').", "error": null, "duration_s": 5.622, "model_calls": 1, "prompt_tokens": 451, "output_tokens": 1}
+{"timestamp": "2026-11-18T23:24:07+00:00", "query": "comfy sweater", "wardrobe_items": 10, "description": "comfy sweater", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": null, "results": 0, "selected_item": null, "selected_title": null, "outcome": "stopped", "message": "No listings matched 'comfy sweater'. To get results, try broader words, like an item type ('jacket', 'dress', 'jeans') or a style ('vintage', 'y2k', 'streetwear').", "error": null, "duration_s": 2.739, "model_calls": 1, "prompt_tokens": 451, "output_tokens": 1}
+{"timestamp": "2026-11-18T23:24:10+00:00", "query": "comfy sweater", "wardrobe_items": 10, "description": "comfy sweater", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": "cardigan", "results": 1, "selected_item": "lst_008", "selected_title": "Knit Cardigan — Chunky Brown", "outcome": "fit_card", "message": null, "error": null, "duration_s": 7.049, "model_calls": 3, "prompt_tokens": 985, "output_tokens": 155}
+{"timestamp": "2026-11-18T23:24:17+00:00", "query": "comfy sweater", "wardrobe_items": 10, "description": "comfy sweater", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": null, "results": 0, "selected_item": null, "selected_title": null, "outcome": "stopped", "message": "No listings matched 'comfy sweater'. To get results, try broader words, like an item type ('jacket', 'dress', 'jeans') or a style ('vintage', 'y2k', 'streetwear').", "error": null, "duration_s": 2.028, "model_calls": 1, "prompt_tokens": 451, "output_tokens": 1}
+{"timestamp": "2026-11-18T23:24:19+00:00", "query": "comfy sweater", "wardrobe_items": 10, "description": "comfy sweater", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": "cozy knitwear", "results": 1, "selected_item": "lst_008", "selected_title": "Knit Cardigan — Chunky Brown", "outcome": "fit_card", "message": null, "error": null, "duration_s": 4.89, "model_calls": 3, "prompt_tokens": 983, "output_tokens": 166}
+{"timestamp": "2026-11-18T23:24:24+00:00", "query": "comfy sweater", "wardrobe_items": 10, "description": "comfy sweater", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": "cozy", "results": 2, "selected_item": "lst_008", "selected_title": "Knit Cardigan — Chunky Brown", "outcome": "fit_card", "message": null, "error": null, "duration_s": 5.925, "model_calls": 3, "prompt_tokens": 985, "output_tokens": 156}
+{"timestamp": "2026-11-18T23:24:30+00:00", "query": "comfy sweater", "wardrobe_items": 10, "description": "comfy sweater", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": null, "results": 0, "selected_item": null, "selected_title": null, "outcome": "stopped", "message": "No listings matched 'comfy sweater'. To get results, try broader words, like an item type ('jacket', 'dress', 'jeans') or a style ('vintage', 'y2k', 'streetwear').", "error": null, "duration_s": 1.973, "model_calls": 1, "prompt_tokens": 451, "output_tokens": 1}
+{"timestamp": "2026-11-18T23:24:32+00:00", "query": "comfy sweater", "wardrobe_items": 10, "description": "comfy sweater", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": "cardigan", "results": 1, "selected_item": "lst_008", "selected_title": "Knit Cardigan — Chunky Brown", "outcome": "fit_card", "message": null, "error": null, "duration_s": 34.653, "model_calls": 3, "prompt_tokens": 984, "output_tokens": 158}
+{"timestamp": "2026-11-18T23:25:07+00:00", "query": "comfy sweater", "wardrobe_items": 10, "description": "comfy sweater", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": null, "results": 0, "selected_item": null, "selected_title": null, "outcome": "stopped", "message": "No listings matched 'comfy sweater'. To get results, try broader words, like an item type ('jacket', 'dress', 'jeans') or a style ('vintage', 'y2k', 'streetwear').", "error": null, "duration_s": 2.609, "model_calls": 1, "prompt_tokens": 451, "output_tokens": 1}
+{"timestamp": "2026-11-18T23:25:09+00:00", "query": "comfy sweater", "wardrobe_items": 10, "description": "comfy sweater", "size": null, "max_price": null, "rewrite_tried": true, "rewritten_description": null, "results": 0, "selected_item": null, "selected_title": null, "outcome": "stopped", "message": "No listings matched 'comfy sweater'. To get results, try broader words, like an item type ('jacket', 'dress', 'jeans') or a style ('vintage', 'y2k', 'streetwear').", "error": null, "duration_s": 3.192, "model_calls": 1, "prompt_tokens": 451, "output_tokens": 1}
+{"timestamp": "2026-11-18T23:28:56+00:00", "query": "denim jacket under $50", "wardrobe_items": 10, "description": "denim jacket", "size": null, "max_price": 50.0, "rewrite_tried": false, "rewritten_description": null, "results": 1, "selected_item": "lst_007", "selected_title": "Denim Jacket — Light Wash, Cropped", "outcome": "stopped", "message": "Couldn't reach the AI model, so no outfit or caption could be written. The search still found Denim Jacket — Light Wash, Cropped for $42.0 on poshmark. Check that the API key in .env is correct and that you're online, then run the same query again.", "error": null, "duration_s": 5.597, "model_calls": 1, "prompt_tokens": 0, "output_tokens": 0}
+```
+
+**What I noticed in the log:** the same query, `comfy sweater`, with the rewrite at temperature 0, got four different results across ten runs: `cardigan` twice, `cozy knitwear`, `cozy`, and nothing usable six times. Temperature 0 doesn't make the model repeat itself. Earlier it looked like `comfy sweater` always became `cardigan`, but only because the cache kept handing back the same answer.
+
+**What It Costs**
+
+Measured with `python measure_cost.py 'comfy sweater'`: ten runs of the same query with the cache off, averaging the tokens and time that `run_log.py` recorded for each run. Token counts come from the API's own `usage_metadata`, through `generate.token_counts()`. I picked `comfy sweater` because it goes through the new rewrite step.
+
+| Path                                              | Runs out of 10 | Model calls | Prompt + output tokens | Seconds                                  |
+| ------------------------------------------------- | -------------- | ----------- | ---------------------- | ---------------------------------------- |
+| Rewrite found something, then outfit and fit card | 4              | 3           | about 984 + 159        | 4.9 to 7.0 (34.7 with a rate limit wait) |
+| Rewrite had nothing, stopped                      | 6              | 1           | 451 + 1                | 2.0 to 5.6                               |
+| **Average per run**                               | 10             | **1.8**     | **664 + 64 = 728**     | **7.07**                                 |
+
+The rewrite step on its own costs one call and about 451 prompt tokens, almost all of it the vocabulary list. The 7.07 second average is pulled up by one run that waited 29 seconds for the free tier's 15 calls per minute limit. Without it the average is 4.0 seconds.
+
+**For 100 people a day**, at one run each:
+
+```
+model calls:  100 × 1.8 = 180 calls a day
+tokens:       100 × 728 = 72,800 tokens a day
+time:         100 × 7.07 s = 707 s, about 12 minutes of waiting in total
+```
+
+On the free tier I'm using, that costs $0 in money. The real limit is the 15 calls a minute: if all 100 people showed up in the same minute, 180 calls would take about 12 minutes to get through, so most of them would wait.
