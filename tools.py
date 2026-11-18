@@ -181,3 +181,65 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         "- Return only the caption, nothing else."
     )
     return (generate(prompt) or "").strip()
+
+
+
+
+# ── Capstone: rewrite_description ─────────────────────────────────────────────
+
+def listing_vocabulary() -> list[str]:
+    """
+    Every word used in a listing's title, category, style tags or colors.
+
+    These are the words a rewritten search is allowed to use, so the rewrite
+    can only ask for things the data actually describes.
+    """
+    words: set[str] = set()
+    for listing in load_listings():
+        text = " ".join([
+            listing.get("title") or "",
+            listing.get("category") or "",
+            " ".join(listing.get("style_tags") or []),
+            " ".join(listing.get("colors") or []),
+        ])
+        words.update(re.findall(r"[a-z0-9]+", text.lower()))
+    return sorted(w for w in words if w not in _STOPWORDS and not w.isdigit())
+
+
+def rewrite_description(description: str) -> str | None:
+    """
+    Reword a search that found nothing, using only words the listings use.
+
+    Returns one to three words from listing_vocabulary(), or None when the
+    model has nothing closer to offer (it said NONE, it used no allowed words,
+    or it gave back the same search). Raises ModelUnavailable if the model
+    can't be reached; the loop handles that.
+    """
+    vocab = listing_vocabulary()
+    allowed = set(vocab)
+    prompt = (
+        "A shopper searched a thrift listing site for:\n"
+        f"'{description}'\n\n"
+        "The search only matches exact words, and nothing matched. Rewrite the "
+        "search as one to three words chosen ONLY from this list of words the "
+        "listings use:\n"
+        f"{', '.join(vocab)}\n\n"
+        "Keep the shopper's meaning: choose the closest kind of item, not a "
+        "different kind. If no word in the list means the same kind of item, "
+        "reply NONE.\n"
+        "Reply with only the words, or NONE."
+    )
+    # Temperature 0: a search rewrite should be the same answer every time.
+    reply = (generate(prompt, temperature=0.0) or "").strip()
+    if not reply or reply.upper().startswith("NONE"):
+        return None
+
+    words = [w for w in re.findall(r"[a-z0-9]+", reply.lower()) if w in allowed]
+    if not words:
+        return None
+    rewritten = " ".join(words[:3])
+
+    original = {w for w in _tokens(description) if w not in _STOPWORDS}
+    if set(_tokens(rewritten)) == original:
+        return None
+    return rewritten
