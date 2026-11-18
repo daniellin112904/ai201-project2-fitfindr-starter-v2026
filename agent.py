@@ -16,7 +16,7 @@ Build and test your three tools in `tools.py` first. Then come here.
 import re
 import config
 import trace
-from tools import search_listings, suggest_outfit, create_fit_card
+from tools import search_listings, suggest_outfit, create_fit_card, rewrite_description
 from generate import ModelUnavailable
 from mcp_client import call_tool
 
@@ -46,6 +46,8 @@ def new_session(query: str, wardrobe: dict) -> dict:
         "outfit_suggestion": None,   # what suggest_outfit returned
         "fit_card": None,            # what create_fit_card returned
         "error": None,               # set when the run ended early
+        "rewrite_tried": False,      # capstone: the empty search was reworded once
+        "rewritten_description": None,  # capstone: what it was reworded to, if anything
     }
 
 # ── query parsing ─────────────────────────────────────────────────────────────
@@ -191,24 +193,56 @@ def run_agent(query: str, wardrobe: dict) -> dict:
 
         elif next_step == "search":
             parsed = session["parsed"]
+            # After a rewrite, search the reworded description instead.
+            description = session["rewritten_description"] or parsed["description"]
             session["search_results"] = call_tool("search_listings", {
-                "description": parsed["description"],
+                "description": description,
                 "size": parsed["size"],
                 "max_price": parsed["max_price"],
             })
-            trace.step("search_listings (via MCP)", inputs=parsed,
+            trace.step("search_listings (via MCP)",
+                       inputs={**parsed, "description": description},
                        returned=[f"{r['id']} {r['title']} ${r['price']}"
                                  for r in session["search_results"]])
 
-            # The branch. Nothing found: explain and stop before suggest_outfit.
-            if not session["search_results"]:
-                session["error"] = _empty_message(parsed)
-                trace.step("stop", inputs={"reason": "empty search"},
-                           returned=session["error"])
-                next_step = "done"
-            else:
+            # The branch. Nothing found: reword it once, then explain and stop
+            # before suggest_outfit.
+            if session["search_results"]:
                 session["selected_item"] = session["search_results"][0]
                 next_step = "suggest"
+            elif not session["rewrite_tried"]:
+                next_step = "rewrite"
+            else:
+                session["error"] = _empty_message(parsed) + (
+                    f" (I also tried searching for '{description}'.)"
+                )
+                trace.step("stop", inputs={"reason": "empty search after rewrite"},
+                           returned=session["error"])
+                next_step = "done"
+
+        elif next_step == "rewrite":
+            # Capstone: one attempt to reword an empty search into words the
+            # listings use. Never more than one, so this can't loop.
+            session["rewrite_tried"] = True
+            parsed = session["parsed"]
+            note = ""
+            try:
+                session["rewritten_description"] = rewrite_description(parsed["description"])
+            except ModelUnavailable:
+                session["rewritten_description"] = None
+                note = "model unavailable, keeping the original empty result"
+            trace.step("rewrite_description",
+                       inputs={"description": parsed["description"]},
+                       returned=session["rewritten_description"] or "no rewrite",
+                       note=note)
+
+            if session["rewritten_description"]:
+                next_step = "search"
+            else:
+                session["error"] = _empty_message(parsed)
+                trace.step("stop", inputs={"reason": "empty search, no rewrite"},
+                           returned=session["error"])
+                next_step = "done"
 
         elif next_step == "suggest":
             try:
