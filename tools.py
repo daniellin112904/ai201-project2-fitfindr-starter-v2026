@@ -210,10 +210,10 @@ def rewrite_description(description: str) -> str | None:
     """
     Reword a search that found nothing, using only words the listings use.
 
-    Returns one to three words from listing_vocabulary(), or None when the
-    model has nothing closer to offer (it said NONE, it used no allowed words,
-    or it gave back the same search). Raises ModelUnavailable if the model
-    can't be reached; the loop handles that.
+    Returns one word from listing_vocabulary(), the kind of item, or None when
+    the model has nothing closer to offer (it said NONE, it used no allowed
+    words, or it gave back the same search). Raises ModelUnavailable if the
+    model can't be reached; the loop handles that.
     """
     vocab = listing_vocabulary()
     allowed = set(vocab)
@@ -221,15 +221,15 @@ def rewrite_description(description: str) -> str | None:
         "A shopper searched a thrift listing site for:\n"
         f"'{description}'\n\n"
         "The search only matches exact words, and nothing matched. Rewrite the "
-        "search as one to three words chosen ONLY from this list of words the "
-        "listings use:\n"
+        "search as ONE word: the most specific kind of item, chosen ONLY from "
+        "this list of words the listings use:\n"
         f"{', '.join(vocab)}\n\n"
         "Keep the shopper's meaning: choose the closest kind of item, not a "
         "different kind. If no word in the list means the same kind of item, "
         "reply NONE.\n"
-        "Reply with only the words, or NONE."
+        "Reply with only that one word, or NONE."
     )
-    # Temperature 0: a search rewrite should be the same answer every time.
+    # Temperature 0 lowers the variation but doesn't remove it (see the log).
     reply = (generate(prompt, temperature=0.0) or "").strip()
     if not reply or reply.upper().startswith("NONE"):
         return None
@@ -237,7 +237,10 @@ def rewrite_description(description: str) -> str | None:
     words = [w for w in re.findall(r"[a-z0-9]+", reply.lower()) if w in allowed]
     if not words:
         return None
-    rewritten = " ".join(words[:3])
+    # Capstone fix: keep one word, the last one, which is usually the item
+    # type. search_listings needs every word on ONE listing, and multi-word
+    # rewrites like "athletic sneakers" combined words from different listings.
+    rewritten = words[-1]
 
     original = {w for w in _tokens(description) if w not in _STOPWORDS}
     if set(_tokens(rewritten)) == original:
