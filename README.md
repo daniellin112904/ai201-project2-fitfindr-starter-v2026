@@ -520,3 +520,91 @@ time:         100 × 7.07 s = 707 s, about 12 minutes of waiting in total
 ```
 
 On the free tier I'm using, that costs $0 in money. The real limit is the 15 calls a minute: if all 100 people showed up in the same minute, 180 calls would take about 12 minutes to get through, so most of them would wait.
+
+**Run Log and Verdicts**
+
+Every run had the cache off. Each trial is its own process (`python capstone_eval.py --label before --trial N`), and the summary is `results/capstone_before.md`. The test queries and the listing IDs that count as a match are fixed in `criteria.md`, which was committed before any results.
+
+| Criterion                                            | Target   | Run 1 | Run 2 | Run 3 | Verdict    |
+| ---------------------------------------------------- | -------- | ----- | ----- | ----- | ---------- |
+| 1. Rewrite finds an allowed listing                  | 7 of 10  | 5/10  | 6/10  | 7/10  | **MISSED** |
+| 2. At most one rewrite; none when search has results | 20 of 20 | 20/20 | 20/20 | 20/20 | MET        |
+| 3. Impossible query stops with a clear message       | 10 of 10 | 10/10 | 10/10 | 10/10 | MET        |
+| 4. Model down: stopped, not crashed, and logged      | 5 of 5   | 5/5   | 5/5   | 5/5   | MET        |
+| 5. Every run has a complete log record               | 10 of 10 | 10/10 | 10/10 | 10/10 | MET        |
+
+Criterion 1 hit 7 in one trial, but the target has to hold in all three, so it's a miss.
+
+**Real output from trial 1**, from `capstone_eval.py::trial`, with every criterion 1 attempt from `capstone_eval.py::summary`:
+
+```
+Trial 1 (before):
+  criterion 1: 5/10
+  criterion 2: 20/20
+  criterion 3: 10/10
+  criterion 4: 5/5
+  criterion 5: 10/10
+
+| Trial | Query | Rewritten to | Selected | Pass |
+|---|---|---|---|---|
+| 1 | comfy sweater | cozy knitwear | lst_008 | yes |
+| 1 | comfy sweater | None | None | no |
+| 1 | purse | bag | lst_039 | yes |
+| 1 | purse | bag | lst_039 | yes |
+| 1 | running shoes | athletic sneakers | None | no |
+| 1 | running shoes | athletic shoes | None | no |
+| 1 | button up shirt | button down shirt | None | no |
+| 1 | button up shirt | button down shirt | None | no |
+| 1 | ankle booties | boots | lst_028 | yes |
+| 1 | ankle booties | boots | lst_028 | yes |
+```
+
+**Diagnosis of the miss.** There were 13 failures across the three trials, and 12 of them were multi-word rewrites: `athletic sneakers`, `athletic shoes`, and `button down shirt`. The other one was `comfy sweater`, where the model returned nothing usable. Every one-word rewrite found the right listing (`bag`, `boots`, `cardigan`, `sneakers`).
+
+The stage is the hand-off from `tools.py::rewrite_description` to `tools.py::search_listings`. The mechanism: the rewrite picks each word from the vocabulary of the whole store, but my unit 4 fix makes search require every query word to appear on one listing. So each word is valid on its own, but together they describe a listing that doesn't exist. "athletic" is a style tag on a listing that isn't a shoe. The silk button-down has "button" and "down" but not "shirt", and the flannel has "shirt" but not "button down". My criterion assumed a rewrite either finds the right words or it doesn't, but the real failure was that the right words got combined.
+
+A second, smaller cause: the rewrite runs at temperature 0, but the model still gave different answers for the same query (`comfy sweater` became `cozy knitwear`, `cardigan`, `cozy cardigan`, or nothing). Temperature 0 lowers the variation but doesn't remove it.
+
+**The Improvement**
+
+**What I changed:** `rewrite_description` now returns one word, the kind of item. The prompt asks for the most specific item type as a single word, and the code keeps only the last allowed word the model returns, since the item type usually comes last ("athletic sneakers" keeps "sneakers").
+
+**Why:** the diagnosis showed 12 of 13 failures came from combining words from different listings, and every one-word rewrite worked.
+
+**Did it help:** I didn't do a live rerun with the fix, because I ran out of time before Demo Day. Instead, I replayed the fix against the 30 rewrites the model actually gave in the before run, keeping only the last word of each and searching for it:
+
+| Logged rewrite    | Kept     | First result            | Allowed? |
+| ----------------- | -------- | ----------------------- | -------- |
+| athletic sneakers | sneakers | lst_019                 | yes      |
+| athletic shoes    | shoes    | lst_009 (Mary Janes)    | **no**   |
+| button down shirt | shirt    | lst_003 (flannel shirt) | yes      |
+| cozy knitwear     | knitwear | lst_008                 | yes      |
+| cozy cardigan     | cardigan | lst_008                 | yes      |
+
+| Criterion 1           | Run 1 | Run 2 | Run 3 |
+| --------------------- | ----- | ----- | ----- |
+| Before (live)         | 5/10  | 6/10  | 7/10  |
+| Replayed with the fix | 8/10  | 8/10  | 10/10 |
+
+The replay would meet the target in all three trials, but it isn't a measurement. It assumes the model gives the same words it did before, and the new prompt changes what the model says. The fix also creates a new risk: `athletic shoes` still fails, because "shoes" is too general and the first shoe listing is Mary Janes. One word fixes combining the wrong words, but it can make a rewrite too broad.
+
+**What's Still Broken**
+
+- **Criterion 1 is unverified after the fix.** What I'd do: run `python capstone_eval.py --label after` three times, exactly like the before run. Why I stopped: I ran out of time before Demo Day, and each set of three trials takes about 12 minutes because of the free tier's 15 calls a minute.
+- **A one-word rewrite can be too general.** `athletic shoes` becomes `shoes` and lands on the Mary Janes. What I'd do: rank the results of a rewritten search so the listing closest to the original query comes first, instead of keeping file order.
+- **The model sometimes returns nothing usable** (`comfy sweater` about half the time in the cost run). What I'd do: show the model a few real listing titles as examples, not only a word list.
+- **What I'd do first, and why:** the live after run. Every other fix depends on knowing whether the one-word change actually works with the real model, and right now I only have a replay.
+
+**How I Used AI**
+
+**Moment 1**
+
+- _What I asked for:_ Help building a feature that rewrites a search when nothing matches, plus the logging and cost measurement around it.
+- _What came back:_ Claude wrote `rewrite_description`, the rewrite branch in `run_agent`, `run_log.py`, and `measure_cost.py`. It limited the rewrite to words that appear in the listings so the model couldn't invent search terms. It also added a comment saying temperature 0 would give the same answer every time.
+- _What I changed:_ The cost run with the cache off proved that comment wrong: the same query got four different rewrites in ten runs. I kept that as a finding instead of hiding it, and it changed how I read every later result.
+
+**Moment 2**
+
+- _What I asked for:_ I wrote my five criteria myself, then asked Claude to check each one: how would you test it, would two people score it the same, and what would make it fail.
+- _What came back:_ It flagged that "a relevant item" in criterion 1 and "a clear message" in criterion 3 could be scored differently by two people. When I asked it to fix them, it added the definitions: the exact test queries, the listing IDs that count as a match, and what the stop message has to contain. After the run, it pointed out that 12 of my 13 misses were multi-word rewrites.
+- _What I changed:_ I reviewed the definitions and committed them before running anything, so the targets couldn't move after I saw results. I chose the one-word fix because it was aimed directly at that diagnosis, and I reported the after result as a replay rather than claiming a measurement I didn't run.
