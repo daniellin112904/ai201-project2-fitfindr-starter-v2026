@@ -1,0 +1,567 @@
+{
+  "label": "before",
+  "trial": 2,
+  "finished": "2026-11-18T18:55:01",
+  "criteria": {
+    "1": [
+      {
+        "query": "comfy sweater",
+        "rewritten": "cardigan",
+        "selected": "lst_008",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "comfy sweater",
+        "rewritten": "cozy cardigan",
+        "selected": "lst_008",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "purse",
+        "rewritten": "bag",
+        "selected": "lst_039",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "purse",
+        "rewritten": "bag",
+        "selected": "lst_039",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "running shoes",
+        "rewritten": "athletic shoes",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": false,
+        "why": "no fit card on an allowed listing"
+      },
+      {
+        "query": "running shoes",
+        "rewritten": "athletic shoes",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": false,
+        "why": "no fit card on an allowed listing"
+      },
+      {
+        "query": "button up shirt",
+        "rewritten": "button down shirt",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": false,
+        "why": "no fit card on an allowed listing"
+      },
+      {
+        "query": "button up shirt",
+        "rewritten": "button down shirt",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": false,
+        "why": "no fit card on an allowed listing"
+      },
+      {
+        "query": "ankle booties",
+        "rewritten": "boots",
+        "selected": "lst_028",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "ankle booties",
+        "rewritten": "boots",
+        "selected": "lst_028",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      }
+    ],
+    "2": [
+      {
+        "query": "comfy sweater",
+        "rewritten": "cardigan",
+        "selected": "lst_008",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "comfy sweater",
+        "rewritten": "cozy cardigan",
+        "selected": "lst_008",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "purse",
+        "rewritten": "bag",
+        "selected": "lst_039",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "purse",
+        "rewritten": "bag",
+        "selected": "lst_039",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "running shoes",
+        "rewritten": "athletic shoes",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "running shoes",
+        "rewritten": "athletic shoes",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "button up shirt",
+        "rewritten": "button down shirt",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "button up shirt",
+        "rewritten": "button down shirt",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "ankle booties",
+        "rewritten": "boots",
+        "selected": "lst_028",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "ankle booties",
+        "rewritten": "boots",
+        "selected": "lst_028",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "vintage graphic tee under $30",
+        "rewritten": null,
+        "selected": "lst_002",
+        "outcome": "fit_card",
+        "rewrites": 0,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "vintage graphic tee under $30",
+        "rewritten": null,
+        "selected": "lst_002",
+        "outcome": "fit_card",
+        "rewrites": 0,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "denim jacket under $50",
+        "rewritten": null,
+        "selected": "lst_007",
+        "outcome": "fit_card",
+        "rewrites": 0,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "denim jacket under $50",
+        "rewritten": null,
+        "selected": "lst_007",
+        "outcome": "fit_card",
+        "rewrites": 0,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "90s track jacket in size M",
+        "rewritten": null,
+        "selected": "lst_004",
+        "outcome": "fit_card",
+        "rewrites": 0,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "90s track jacket in size M",
+        "rewritten": null,
+        "selected": "lst_004",
+        "outcome": "fit_card",
+        "rewrites": 0,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "platform sneakers size 8",
+        "rewritten": null,
+        "selected": "lst_019",
+        "outcome": "fit_card",
+        "rewrites": 0,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "platform sneakers size 8",
+        "rewritten": null,
+        "selected": "lst_019",
+        "outcome": "fit_card",
+        "rewrites": 0,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "silk slip dress in midi length under $40",
+        "rewritten": null,
+        "selected": "lst_013",
+        "outcome": "fit_card",
+        "rewrites": 0,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "silk slip dress in midi length under $40",
+        "rewritten": null,
+        "selected": "lst_013",
+        "outcome": "fit_card",
+        "rewrites": 0,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      }
+    ],
+    "3": [
+      {
+        "query": "designer ballgown size XXS under $5",
+        "rewritten": "dress",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "designer ballgown size XXS under $5",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "tuxedo under $5",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "tuxedo under $5",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "winter coat size XXS under $5",
+        "rewritten": "jacket outerwear",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "winter coat size XXS under $5",
+        "rewritten": "jacket outerwear",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "swimsuit under $5",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "swimsuit under $5",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "ski goggles under $5",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "ski goggles under $5",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      }
+    ],
+    "4": [
+      {
+        "query": "comfy sweater",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "purse",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "running shoes",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "button up shirt",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "ankle booties",
+        "rewritten": null,
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 1,
+        "pass": true,
+        "why": ""
+      }
+    ],
+    "5": [
+      {
+        "query": "comfy sweater",
+        "rewritten": "cardigan",
+        "selected": "lst_008",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "comfy sweater",
+        "rewritten": "cozy cardigan",
+        "selected": "lst_008",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "purse",
+        "rewritten": "bag",
+        "selected": "lst_039",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "purse",
+        "rewritten": "bag",
+        "selected": "lst_039",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "running shoes",
+        "rewritten": "athletic shoes",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "running shoes",
+        "rewritten": "athletic shoes",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "button up shirt",
+        "rewritten": "button down shirt",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "button up shirt",
+        "rewritten": "button down shirt",
+        "selected": null,
+        "outcome": "stopped",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "ankle booties",
+        "rewritten": "boots",
+        "selected": "lst_028",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      },
+      {
+        "query": "ankle booties",
+        "rewritten": "boots",
+        "selected": "lst_028",
+        "outcome": "fit_card",
+        "rewrites": 1,
+        "searches": 2,
+        "pass": true,
+        "why": ""
+      }
+    ]
+  }
+}
